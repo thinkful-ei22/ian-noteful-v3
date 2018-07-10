@@ -18,7 +18,14 @@ noteSchema.set('toObject', {
     }
   });
 
-// Add `createdAt` and `updatedAt` fields
 noteSchema.set('timestamps', true);
+
+noteSchema.methods.serialize = function() {
+    return {
+      id: this._id,
+      title: this.title,
+      content: this.content
+    };
+  };
 
 module.exports = mongoose.model('Note', noteSchema);
