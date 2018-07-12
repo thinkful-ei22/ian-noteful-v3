@@ -19,7 +19,7 @@ describe('Notes Endpoints', () => {
     //then drop it after the test, then disconnect 
     //after all the tests are complete
     before(function () {
-        return mongoose.connect(TEST_MONGODB_URI)
+        return mongoose.connect(TEST_MONGODB_URI, { useNewUrlParser: true })
           .then(() => mongoose.connection.db.dropDatabase());
       });
     
