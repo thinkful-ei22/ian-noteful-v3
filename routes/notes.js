@@ -32,7 +32,12 @@ router.get('/:id', (req, res, next) => {
   Note
     .findById(req.params.id)
     .then(result => {
-      res.json(result.serialize());
+      if(result){
+        res.json(result.serialize());
+      }
+      else{
+        next();
+      }
     })
     .catch(err => next(err));
 });
@@ -48,29 +53,36 @@ router.post('/', (req, res, next) => {
       return res.status(400).send(message);
     }
   }
+  if (req.body.title === '' || req.body.content === ''){
+    const message = `Missing title in request body`;
+    console.error(message);
+    return res.status(400).send(message);
+  }
 
   Note
     .create({
       title: req.body.title,
       content: req.body.content,
   })
-    .then(note => res.status(201).json(note.serialize()))
+    .then(note => res.location(`${req.originalUrl}/${note.id}`).status(201).json(note.serialize()))
     .catch(err => next(err));
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-  if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
+  if (!(req.params.id === req.body.id)) {
     const message =
       `Request path id (${req.params.id}) and request body id ` +
       `(${req.body.id}) must match`;
     console.error(message);
     return res.status(400).json({ message: message });
   }
+  if (req.body.title === '' || req.body.content === ''){
+    const message = `Missing title in request body`;
+    console.error(message);
+    return res.status(400).send(message);
+  }
 
-  // we only support a subset of fields being updateable.
-  // if the user sent over any of the updatableFields, we udpate those values
-  // in document
   const toUpdate = {};
   const updateableFields = ["title", "content"];
 
@@ -81,8 +93,10 @@ router.put('/:id', (req, res, next) => {
   });
 
   Note
-    .findByIdAndUpdate(req.params.id, { $set: toUpdate })
-    .then(() => res.status(204).end())
+    .findByIdAndUpdate(req.params.id, { $set: toUpdate }, { new: true })
+    .then((note) => {
+      return res.location(`${req.originalUrl}`).status(200).json(note)
+    })
     .catch(err => next(err));
 });
 

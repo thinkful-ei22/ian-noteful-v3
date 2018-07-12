@@ -24,7 +24,9 @@ noteSchema.methods.serialize = function() {
     return {
       id: this._id,
       title: this.title,
-      content: this.content
+      content: this.content,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
     };
   };
 
