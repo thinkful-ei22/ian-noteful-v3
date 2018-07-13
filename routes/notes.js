@@ -9,13 +9,17 @@ const router = express.Router();
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
   const { searchTerm } = req.query;
+  const { folderId } = req.query;
   let filter = {};
 
   if (searchTerm) {
     filter.title = { $regex: searchTerm };
   }
+  if (folderId){
+    filter.folderId = folderId;
+  }
   Note
-    .find(searchTerm)
+    .find(filter)
     .sort({ updatedAt: 'desc' })
     .then(notes => {
       res.json({
@@ -33,7 +37,7 @@ router.get('/:id', (req, res, next) => {
     .findById(req.params.id)
     .then(result => {
       if(result){
-        res.json(result.serialize());
+        res.json(result.serialize()).status(200);
       }
       else{
         next();
@@ -58,11 +62,21 @@ router.post('/', (req, res, next) => {
     console.error(message);
     return res.status(400).send(message);
   }
+  
+  //pretty sure this means that you have to include a valid
+  //folderID in order to have successful post....
+  //want it to be okay to not include folderId
+  if(req.body.folderId && !(mongoose.Types.ObjectId.isValid(req.body.folderId))){
+    const message = `Not a valid folder...`;
+    console.error(message);
+    return res.status(404).send(message);
+  }
 
   Note
     .create({
       title: req.body.title,
       content: req.body.content,
+      folderId: req.body.folderId
   })
     .then(note => res.location(`${req.originalUrl}/${note.id}`).status(201).json(note.serialize()))
     .catch(err => next(err));
@@ -82,9 +96,15 @@ router.put('/:id', (req, res, next) => {
     console.error(message);
     return res.status(400).send(message);
   }
+  
+  if(req.body.folderId && !(mongoose.Types.ObjectId.isValid(req.body.folderId))){
+    const message = `Not a valid folder...`;
+    console.error(message);
+    return res.status(404).send(message);
+  }
 
   const toUpdate = {};
-  const updateableFields = ["title", "content"];
+  const updateableFields = ["title", "content", "folderId"];
 
   updateableFields.forEach(field => {
     if (field in req.body) {
@@ -95,7 +115,7 @@ router.put('/:id', (req, res, next) => {
   Note
     .findByIdAndUpdate(req.params.id, { $set: toUpdate }, { new: true })
     .then((note) => {
-      return res.location(`${req.originalUrl}`).status(200).json(note)
+      return res.location(`${req.originalUrl}`).json(note).status(200)
     })
     .catch(err => next(err));
 });

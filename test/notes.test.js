@@ -7,7 +7,9 @@ const mongoose = require('mongoose');
 const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
 const Note = require('../models/note');
+const Folder = require('../models/folder');
 const seedNotes = require('../db/seed/notes');
+const seedFolders = require('../db/seed/folders');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
@@ -24,7 +26,10 @@ describe('Notes Endpoints', () => {
       });
     
       beforeEach(function () {
-        return Note.insertMany(seedNotes);
+        return Promise.all([
+            Note.insertMany(seedNotes),
+            Folder.insertMany(seedFolders)
+        ]) 
       });
     
       afterEach(function () {
@@ -36,7 +41,7 @@ describe('Notes Endpoints', () => {
       });
 
       describe('GET /api/notes', function() {
-          it('should have same res from api as the db', function () {
+          it('should return an array with the correct number of notes', function () {
               return Promise.all([
                   Note.find(),
                   chai.request(app).get('/api/notes')
@@ -44,6 +49,39 @@ describe('Notes Endpoints', () => {
                 .then(([data, res]) => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.json;
+                    expect(res.body.notes).to.be.a('array');
+                    expect(res.body.notes).to.have.length(data.length);
+                });
+          });
+          it('should return a list with the correct right fields', function () {
+            return Promise.all([
+              Note.find().sort({ updatedAt: 'desc' }),
+              chai.request(app).get('/api/notes')
+            ])
+              .then(([data, res]) => {
+                expect(res).to.have.status(200);
+                expect(res).to.be.json;
+                expect(res.body.notes).to.be.a('array');
+                expect(res.body.notes).to.have.length(data.length);
+                res.body.notes.forEach(function (item, i) {
+                  expect(item).to.be.a('object');
+                  expect(item).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt', 'folderId');
+                });
+              });
+          });
+          it('should return correct results for a folderid search', function() {
+              let data;
+              return Folder.findOne()
+                .then((_data) => {
+                    data = _data;
+                    return Promise.all([
+                        Note.find({ folderId: data.id }),
+                        chai.request(app).get(`/api/notes?folderId=${data.id}`)
+                    ]);
+                })
+                .then(([data, res]) => {
+                    expect(res).to.be.json;
+                    expect(res).to.have.status(200);
                     expect(res.body.notes).to.be.a('array');
                     expect(res.body.notes).to.have.length(data.length);
                 });
@@ -62,7 +100,7 @@ describe('Notes Endpoints', () => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.json;
                     expect(res).to.be.a('object');
-                    expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+                    expect(res.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
                     expect(res.body.id).to.equal(data.id);
                     expect(res.body.title).to.equal(data.title);
                     expect(res.body.content).to.equal(data.content);
@@ -70,7 +108,7 @@ describe('Notes Endpoints', () => {
                     expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
                 });
           });
-          it('should return a 404 when given a bogus ID', function() {
+          it('should return a 404 when given a valid but bogus ID', function() {
               let id = '000000000000000000000020';
               return chai.request(app).get(`/api/notes/${id}`)
                 .then((res) => {
@@ -85,7 +123,8 @@ describe('Notes Endpoints', () => {
           it('should create and return a new item when provided right data', function() {
               const newItem = {
                   'title': 'the best article ever!',
-                  'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+                  'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
+                  'folderId': '111111111111111111111102'
               };
 
               let res;
@@ -98,7 +137,7 @@ describe('Notes Endpoints', () => {
                     expect(res).to.be.json;
                     expect(res).to.have.header('location');
                     expect(res.body).to.be.a('object');
-                    expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+                    expect(res.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
                     return Note.findById(res.body.id);
                 })
                 .then(data => {
@@ -139,7 +178,7 @@ describe('Notes Endpoints', () => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.json;
                     expect(res).to.be.a('object');
-                    expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+                    expect(res.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
                     expect(res.body.id).to.equal(data.id);
                     expect(res.body.title).to.equal(updateInfo.title);
                     expect(res.body.content).to.equal(updateInfo.content);
@@ -184,13 +223,9 @@ describe('Notes Endpoints', () => {
               let badId = '';
               return chai.request(app).delete(`/api/notes/${badId}`)
               .then((res) => {
-                // expect(res).to.be.json;
                 expect(res).to.have.status(404);
               });
           });
       });
-
-
-
 });
 
