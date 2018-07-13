@@ -49,8 +49,8 @@ describe('Notes Endpoints', () => {
                 .then(([data, res]) => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.json;
-                    expect(res.body.notes).to.be.a('array');
-                    expect(res.body.notes).to.have.length(data.length);
+                    expect(res.body).to.be.a('array');
+                    expect(res.body).to.have.length(data.length);
                 });
           });
           it('should return a list with the correct right fields', function () {
@@ -61,9 +61,9 @@ describe('Notes Endpoints', () => {
               .then(([data, res]) => {
                 expect(res).to.have.status(200);
                 expect(res).to.be.json;
-                expect(res.body.notes).to.be.a('array');
-                expect(res.body.notes).to.have.length(data.length);
-                res.body.notes.forEach(function (item, i) {
+                expect(res.body).to.be.a('array');
+                expect(res.body).to.have.length(data.length);
+                res.body.forEach(function (item, i) {
                   expect(item).to.be.a('object');
                   expect(item).to.have.keys('id', 'title', 'content', 'tags', 'createdAt', 'updatedAt', 'folderId');
                 });
@@ -82,8 +82,8 @@ describe('Notes Endpoints', () => {
                 .then(([data, res]) => {
                     expect(res).to.be.json;
                     expect(res).to.have.status(200);
-                    expect(res.body.notes).to.be.a('array');
-                    expect(res.body.notes).to.have.length(data.length);
+                    expect(res.body).to.be.a('array');
+                    expect(res.body).to.have.length(data.length);
                 });
           });
       });

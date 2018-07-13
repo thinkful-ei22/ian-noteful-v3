@@ -27,9 +27,9 @@ router.get('/', (req, res, next) => {
     .populate('folderId tags')
     .sort({ updatedAt: 'desc' })
     .then(notes => {
-      res.json({
-        notes: notes.map((note) => note.serialize())
-      })
+      res.json(
+        notes.map((note) => note.serialize())
+      )
     })
     .catch(err => next(err));
 });
