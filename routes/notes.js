@@ -4,32 +4,29 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const Note = require('../models/note');
+const Tag = require('../models/tag');
 const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm } = req.query;
-  const { folderId } = req.query;
-  const { tagId } = req.query;
+  const { searchTerm, folderId, tagId } = req.query;
   let filter = {};
-
   if (searchTerm) {
     filter.title = { $regex: searchTerm };
   }
   if (folderId){
     filter.folderId = folderId;
   }
-  if (tagId){
-    filter.tags.id = tagId;
+  if(tagId){
+    filter.tags = tagId;
   }
+
   Note
     .find(filter)
     .populate('folderId tags')
     .sort({ updatedAt: 'desc' })
     .then(notes => {
-      res.json(
-        notes.map((note) => note.serialize())
-      )
+      res.json(notes.map((note) => note.serialize()));
     })
     .catch(err => next(err));
 });
@@ -112,7 +109,8 @@ router.put('/:id', (req, res, next) => {
     console.error(message);
     return res.status(404).send(message);
   }
-  if(req.body.tags && !(mongoose.Types.ObjectId.isValid(req.body.tags.id))){
+  //WRONG
+  if(req.body.tagId && !(mongoose.Types.ObjectId.isValid(req.body.tagId))){
     const message = `Not a valid tag...`;
     console.error(message);
     return res.status(404).send(message);
