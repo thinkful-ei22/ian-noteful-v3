@@ -10,6 +10,7 @@ const router = express.Router();
 router.get('/', (req, res, next) => {
   const { searchTerm } = req.query;
   const { folderId } = req.query;
+  const { tagId } = req.query;
   let filter = {};
 
   if (searchTerm) {
@@ -18,8 +19,12 @@ router.get('/', (req, res, next) => {
   if (folderId){
     filter.folderId = folderId;
   }
+  if (tagId){
+    filter.tags.id = tagId;
+  }
   Note
     .find(filter)
+    .populate('folderId tags')
     .sort({ updatedAt: 'desc' })
     .then(notes => {
       res.json({
@@ -35,6 +40,7 @@ router.get('/', (req, res, next) => {
 router.get('/:id', (req, res, next) => {
   Note
     .findById(req.params.id)
+    .populate('folders tags')
     .then(result => {
       if(result){
         res.json(result.serialize()).status(200);
@@ -63,20 +69,24 @@ router.post('/', (req, res, next) => {
     return res.status(400).send(message);
   }
   
-  //pretty sure this means that you have to include a valid
-  //folderID in order to have successful post....
-  //want it to be okay to not include folderId
   if(req.body.folderId && !(mongoose.Types.ObjectId.isValid(req.body.folderId))){
     const message = `Not a valid folder...`;
     console.error(message);
     return res.status(404).send(message);
   }
+  if(req.body.tags && !(mongoose.Types.ObjectId.isValid(req.body.tags.id))){
+    const message = `Not a valid tag...`;
+    console.error(message);
+    return res.status(404).send(message);
+  }
+
 
   Note
     .create({
       title: req.body.title,
       content: req.body.content,
-      folderId: req.body.folderId
+      folderId: req.body.folderId,
+      tags: req.body.tags
   })
     .then(note => res.location(`${req.originalUrl}/${note.id}`).status(201).json(note.serialize()))
     .catch(err => next(err));
@@ -102,9 +112,14 @@ router.put('/:id', (req, res, next) => {
     console.error(message);
     return res.status(404).send(message);
   }
+  if(req.body.tags && !(mongoose.Types.ObjectId.isValid(req.body.tags.id))){
+    const message = `Not a valid tag...`;
+    console.error(message);
+    return res.status(404).send(message);
+  }
 
   const toUpdate = {};
-  const updateableFields = ["title", "content", "folderId"];
+  const updateableFields = ["title", "content", "folderId", "tags"];
 
   updateableFields.forEach(field => {
     if (field in req.body) {
