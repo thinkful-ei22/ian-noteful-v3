@@ -65,7 +65,7 @@ describe('Notes Endpoints', () => {
                 expect(res.body.notes).to.have.length(data.length);
                 res.body.notes.forEach(function (item, i) {
                   expect(item).to.be.a('object');
-                  expect(item).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt', 'folderId');
+                  expect(item).to.have.keys('id', 'title', 'content', 'tags', 'createdAt', 'updatedAt', 'folderId');
                 });
               });
           });
@@ -100,7 +100,7 @@ describe('Notes Endpoints', () => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.json;
                     expect(res).to.be.a('object');
-                    expect(res.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
+                    expect(res.body).to.have.keys('id', 'title', 'tags', 'content', 'folderId', 'createdAt', 'updatedAt');
                     expect(res.body.id).to.equal(data.id);
                     expect(res.body.title).to.equal(data.title);
                     expect(res.body.content).to.equal(data.content);
@@ -137,7 +137,7 @@ describe('Notes Endpoints', () => {
                     expect(res).to.be.json;
                     expect(res).to.have.header('location');
                     expect(res.body).to.be.a('object');
-                    expect(res.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
+                    expect(res.body).to.have.keys('id', 'title', 'content', 'tags', 'folderId', 'createdAt', 'updatedAt');
                     return Note.findById(res.body.id);
                 })
                 .then(data => {
@@ -178,7 +178,7 @@ describe('Notes Endpoints', () => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.json;
                     expect(res).to.be.a('object');
-                    expect(res.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
+                    expect(res.body).to.have.keys('id', 'title', 'content', 'tags', 'folderId', 'createdAt', 'updatedAt');
                     expect(res.body.id).to.equal(data.id);
                     expect(res.body.title).to.equal(updateInfo.title);
                     expect(res.body.content).to.equal(updateInfo.content);
