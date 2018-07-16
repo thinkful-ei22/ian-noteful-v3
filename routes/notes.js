@@ -4,7 +4,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const Note = require('../models/note');
-const Tag = require('../models/tag');
 const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
@@ -66,16 +65,16 @@ router.post('/', (req, res, next) => {
     return res.status(400).send(message);
   }
   
-  if(req.body.folderId && !(mongoose.Types.ObjectId.isValid(req.body.folderId))){
-    const message = `Not a valid folder...`;
-    console.error(message);
-    return res.status(404).send(message);
-  }
-  if(req.body.tags && !(mongoose.Types.ObjectId.isValid(req.body.tags.id))){
-    const message = `Not a valid tag...`;
-    console.error(message);
-    return res.status(404).send(message);
-  }
+  // if(req.body.folderId && !(mongoose.Types.ObjectId.isValid(req.body.folderId))){
+  //   const message = `Not a valid folder...`;
+  //   console.error(message);
+  //   return res.status(404).send(message);
+  // }
+  // if(req.body.tags && !(mongoose.Types.ObjectId.isValid(req.body.tags.id))){
+  //   const message = `Not a valid tag...`;
+  //   console.error(message);
+  //   return res.status(404).send(message);
+  // }
 
 
   Note
